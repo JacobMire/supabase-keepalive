@@ -1,20 +1,28 @@
-name: Keep Supabase Projects Alive  
-  
-on:  
-  schedule:  
-    - cron: "0 0 */3 * *"  # every 3 days  
-  workflow_dispatch:       # optional manual run  
-  
-jobs:  
-  ping:  
-    runs-on: ubuntu-latest  
-  
-    steps:  
-      - name: Ping all Supabase healthcheck tables  
-        run: |  
-          echo "Starting Supabase keep-alive ping..."  
-          while read url; do  
-            echo "Pinging $url"  
-            curl -s "$url"  
-          done <<< "${{ secrets.SUPABASE_HEALTHCHECK_URLS }}"  
+name: Keep Supabase Projects Alive
+
+on:
+  schedule:
+    - cron: "0 0 */3 * *"  # every 3 days
+  workflow_dispatch:       # optional manual run
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping all Supabase healthcheck tables
+        run: |
+          echo "Starting Supabase keep-alive ping..."
+          
+          # Loop through each line of the combined secret
+          while IFS= read -r line; do
+            [ -n "$line" ] || continue
+            url="${line%%|*}"       # extract URL (before |)
+            key="${line##*|}"       # extract anon key (after |)
+            echo "Pinging $url"
+            curl -s "$url" \
+              -H "apikey: $key" \
+              -H "Authorization: Bearer $key"
+          done <<< "${{ secrets.SUPABASE_PROJECTS }}"
+          
           echo "All projects pinged."
