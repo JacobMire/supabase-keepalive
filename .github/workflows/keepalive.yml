@@ -1,0 +1,20 @@
+name: Keep Supabase Projects Alive  
+  
+on:  
+  schedule:  
+    - cron: "0 0 */3 * *"  # every 3 days  
+  workflow_dispatch:       # optional manual run  
+  
+jobs:  
+  ping:  
+    runs-on: ubuntu-latest  
+  
+    steps:  
+      - name: Ping all Supabase healthcheck tables  
+        run: |  
+          echo "Starting Supabase keep-alive ping..."  
+          while read url; do  
+            echo "Pinging $url"  
+            curl -s "$url"  
+          done <<< "${{ secrets.SUPABASE_HEALTHCHECK_URLS }}"  
+          echo "All projects pinged."
